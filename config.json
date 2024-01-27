@@ -1,6 +1,6 @@
 {
     "trading_session": {
-        "n_events": 10,
+        "n_events": 1,
         "monte_carlo_simuls": 10000,
         "difficulty": 0.5,
         "initial_balance": 100,

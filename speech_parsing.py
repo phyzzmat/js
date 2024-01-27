@@ -33,16 +33,22 @@ def parse_speech(init_rec):
             load_options={
                 'device': 'cuda:0'
             },
-            initial_prompt='Lexicon: bid, ask, at, for, numbers, up. Example: 10 for 6, 11 at 7.')
-        print(text)
-        tokenized_text = list(filter(lambda word: is_float(word) or word.replace('.', '') in ALLOWED_WORDS, ''.join([
+            initial_prompt='Lexicon: bid, ask, at, for, numbers, up. Example: 10 for 6, 11 at 7. Another example:')
+        tokenized_text = list(map(lambda x: x[:-1] if x.endswith('.') else x, filter(lambda word: is_float(word) or word.replace('.', '') in ALLOWED_WORDS, ''.join([
             i.lower() for i in text if i.isalnum() or i in ' .'
-        ]).split()))
+        ]).split())))
         if check_pattern(tokenized_text, [is_float, is_partial('at'), is_float, is_float, is_partial('up')]):
             return Quote(
                 bid_amount=float(tokenized_text[3]),
                 ask_amount=float(tokenized_text[3]),
                 ask_price=float(tokenized_text[2]),
+                bid_price=float(tokenized_text[0])
+            )
+        elif check_pattern(tokenized_text, [is_float, is_partial('bid'), is_partial('for,4'), is_float, is_float, is_partial('at'), is_float]):
+            return Quote(
+                bid_amount=float(tokenized_text[3]),
+                ask_amount=float(tokenized_text[4]),
+                ask_price=float(tokenized_text[6]),
                 bid_price=float(tokenized_text[0])
             )
         else:
