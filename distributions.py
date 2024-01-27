@@ -66,7 +66,8 @@ def get_uniform_discrete():
 def generate_distribution(config):
 
     CHOICES = [
-        "bernoulli", "poisson", "uniform_discrete", # "constant", # "normal", "geometric", "exponential",
+        # "constant", # "normal", "geometric", "exponential",
+        "bernoulli", "poisson", "uniform_discrete",
         # "uniform", "uniform_discrete"
     ]
 

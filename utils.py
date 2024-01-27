@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+
 @dataclass
 class Quote:
     bid_price: float
@@ -37,5 +38,4 @@ def get_side(expr, quote, n_boot=10):
 def resolve_market(expr, quote, side):
     value = expr()
     return value, ((quote.ask_price - value) * quote.ask_amount) if side == 'ask' else \
-                ((value - quote.bid_price) * quote.bid_amount)
-    
+        ((value - quote.bid_price) * quote.bid_amount)

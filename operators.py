@@ -40,7 +40,6 @@ class BootstrapMean(Distribution):
         return np.array(out).mean()
 
 
-
 def get_bootstrap_mean(left, n=10):
 
     def bootstrap():
@@ -67,7 +66,6 @@ def get_bootstrap_max(left, n=10):
         partial=bootstrap,
         repr=f"Bootstrap max x{n}"
     )
-
 
 
 def get_sum(left, right):
@@ -105,7 +103,7 @@ def generate_binary_op(config, left, right):
 
 def generate_unary_op(config, left):
     CHOICES = [
-        "bootstrap_mean", "bootstrap_max" # "normal", "geometric", "exponential",
+        "bootstrap_mean", "bootstrap_max"  # "normal", "geometric", "exponential",
         # "uniform", "uniform_discrete"
     ]
     items = sorted(list(config['operator_generation']['unary_op_probs'].items()),

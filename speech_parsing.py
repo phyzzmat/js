@@ -7,7 +7,7 @@ def parse_speech(init_rec):
 
     def is_float(x):
         return x.replace('.', '').isnumeric()
-    
+
     def is_partial(words):
         return lambda x: x.replace('.', '') in words
 
@@ -28,11 +28,11 @@ def parse_speech(init_rec):
         audio_data = init_rec.record(source, duration=5)
         print('Stop!')
         text = init_rec.recognize_whisper(
-            audio_data, 
-            model='small.en', 
+            audio_data,
+            model='small.en',
             load_options={
                 'device': 'cuda:0'
-                },
+            },
             initial_prompt='Lexicon: bid, ask, at, for, numbers, up. Example: 10 for 6, 11 at 7.')
         print(text)
         tokenized_text = list(filter(lambda word: is_float(word) or word.replace('.', '') in ALLOWED_WORDS, ''.join([
@@ -47,6 +47,6 @@ def parse_speech(init_rec):
             )
         else:
             print('Heard the following:', tokenized_text)
-            print('Failed to parse your speech; please repeat your quote more clearly. Tap Enter when ready.')
+            print(
+                'Failed to parse your speech; please repeat your quote more clearly. Tap Enter when ready.')
             return None
-    

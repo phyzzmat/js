@@ -20,12 +20,12 @@ def generate_tree(config):
         else:
             root.left = generate_tree(config)
             root.right = generate_tree(config)
-            root.inner = generate_binary_op(config, root.left.inner, root.right.inner)
+            root.inner = generate_binary_op(
+                config, root.left.inner, root.right.inner)
         return root
     root.is_terminal = True
     root.inner = generate_distribution(config)
     return root
-    
 
 
 class Node:
@@ -37,7 +37,7 @@ class Node:
 
     def __call__(self) -> np.ndarray:
         return self.inner()
-    
+
     def __str__(self):
         if self.is_terminal:
             return self.inner.__str__()
