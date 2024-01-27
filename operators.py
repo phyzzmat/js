@@ -51,7 +51,21 @@ def get_bootstrap_mean(left, n=10):
 
     return Distribution(
         partial=bootstrap,
-        repr=f"Bootstrap x{n}"
+        repr=f"Bootstrap mean x{n}"
+    )
+
+
+def get_bootstrap_max(left, n=10):
+
+    def bootstrap():
+        out = []
+        for i in range(n):
+            out.append(left())
+        return np.array(out).max()
+
+    return Distribution(
+        partial=bootstrap,
+        repr=f"Bootstrap max x{n}"
     )
 
 
@@ -91,7 +105,7 @@ def generate_binary_op(config, left, right):
 
 def generate_unary_op(config, left):
     CHOICES = [
-        "bootstrap"  # "normal", "geometric", "exponential",
+        "bootstrap_mean", "bootstrap_max" # "normal", "geometric", "exponential",
         # "uniform", "uniform_discrete"
     ]
     items = sorted(list(config['operator_generation']['unary_op_probs'].items()),
@@ -101,7 +115,9 @@ def generate_unary_op(config, left):
     assert abs(sum(probs) - 1) < 1e-6, "Sum of probabilities not equal to 1"
     choice = np.random.choice(CHOICES, p=probs)
 
-    if choice == "bootstrap":
+    if choice == "bootstrap_mean":
         return get_bootstrap_mean(left)
+    elif choice == "bootstrap_max":
+        return get_bootstrap_max(left)
     else:
         assert False, "SUCTION"

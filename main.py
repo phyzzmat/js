@@ -11,6 +11,7 @@ from utils import bootstrap, check_spread, get_side, get_spread, resolve_market
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy
 
 
 def play(config):
@@ -58,26 +59,46 @@ def play(config):
     for expr, quote, side, spread in zip(
         all_rvs, all_quotes, all_sides, all_spreads
     ):
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots(3, figsize=(10, 10))
         boot = bootstrap(expr)
-        ax.hist(boot, bins=50)
-        ax.set_title(f'Random value pdf: {expr.__str__()}')
+        ax[0].hist(boot, bins=50)
+        ax[0].set_title(f'Random value pdf: {expr.__str__()}')
 
         taken_quote = quote.bid_price if side == 'bid' else quote.ask_price
+        taken_amount =  quote.bid_amount if side == 'bid' else quote.ask_amount
         non_taken_quote = quote.bid_price if side == 'ask' else quote.ask_price
+        non_taken_amount = quote.bid_amount if side == 'ask' else quote.ask_amount
         
+        pnls = []
+        pnls_oppo = []
         for i in range(config['trading_session']['monte_carlo_simuls']):
-            simulations[i] += resolve_market(expr, quote, side)[1]
+            pnl = resolve_market(expr, quote, side)[1]
+            pnl_oppo = resolve_market(expr, quote, 'bid' if side == 'ask' else 'ask')[1]
+            simulations[i] += pnl
+            pnls.append(pnl)
+            pnls_oppo.append(pnl_oppo)
 
-        ax.axvline(non_taken_quote, c='purple', label='Your quote (not taken)')
-        ax.axvline(taken_quote, c='purple', linewidth=4, label='Your quote (taken)')
-        ax.axvline(boot.mean() - spread / 2, c='green', label=f'Possible optimal approach (bid) = {boot.mean() - spread / 2}')
-        ax.axvline(boot.mean() + spread / 2, c='green', label=f'Possible optimal approach (ask) = {boot.mean() + spread / 2}')
-        ax.axvline(boot.mean(), c='yellow', label='Expected value')
+        ax[0].axvline(non_taken_quote, c='purple', label=f'Your quote (not taken) = {non_taken_quote}')
+        ax[0].text(non_taken_quote, 0.99, non_taken_amount, color='purple', ha='right', va='top', rotation=90,
+            transform=ax[0].get_xaxis_transform())
+        ax[0].axvline(taken_quote, c='purple', linewidth=4, label=f'Your quote (taken) = {taken_quote}')
+        ax[0].text(taken_quote, 0.99, taken_amount, color='purple', ha='right', va='top', rotation=90,
+            transform=ax[0].get_xaxis_transform())
+        ax[0].axvline(boot.mean() - spread / 2, c='green', label=f'Possible optimal approach (bid) = {boot.mean() - spread / 2}')
+        ax[0].axvline(boot.mean() + spread / 2, c='green', label=f'Possible optimal approach (ask) = {boot.mean() + spread / 2}')
+        ax[0].axvline(boot.mean(), c='yellow', label='Expected value')
         
-        ax.axvspan(np.percentile(boot, 2.5), np.percentile(boot, 97.5), color='yellow', label='95 % CI', alpha=0.1)
+        ax[0].axvspan(np.percentile(boot, 2.5), np.percentile(boot, 97.5), color='yellow', label='95 % CI', alpha=0.1)
 
-        ax.legend()
+        ax[0].legend()
+        
+        ax[1].hist(np.array(pnls), bins=50)
+        ax[1].set_title('Your P&L distribution on this market')
+        ax[1].legend()
+
+        ax[2].hist(np.array(pnls_oppo), bins=50)
+        ax[2].set_title('Your P&L distribution on this market if AI took opposite quote')
+        ax[2].legend()
 
         pdf.savefig(fig)
 
@@ -87,8 +108,8 @@ def play(config):
     ax[1].set_title(f"P&L distribution over {config['trading_session']['monte_carlo_simuls']} trading sessions")
     ax[2].set_title(f"P&L log1p-distribution over {config['trading_session']['monte_carlo_simuls']} trading sessions")
     ax[0].plot(all_prefix_pnls)
-    ax[1].hist(simulations)
-    ax[2].hist(np.log1p(np.maximum(0, simulations)))
+    ax[1].hist(simulations, bins=50)
+    ax[2].hist(np.log1p(np.maximum(0, simulations)), bins=50)
     pdf.savefig(fig)
 
     pdf.close()
@@ -100,8 +121,11 @@ def play(config):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=Path, required=True)
+    parser.add_argument('--seed', type=int, required=False)
     args = parser.parse_args()
     config = json.loads(open(args.config).read())
+    if args.seed:
+        np.random.seed(args.seed)
     play(config)
 
 

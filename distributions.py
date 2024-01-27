@@ -48,10 +48,25 @@ def get_poisson():
     )
 
 
+def get_uniform_discrete():
+    n = s.geom.rvs(loc=0, p=0.2)
+    bernoulli_sampler = partial(
+        lambda: s.randint.rvs(
+            low=1,
+            high=n + 1,
+            size=1
+        )
+    )
+    return Distribution(
+        partial=bernoulli_sampler,
+        repr=f"Dice({n})"
+    )
+
+
 def generate_distribution(config):
 
     CHOICES = [
-        "bernoulli", "poisson",  # "constant", # "normal", "geometric", "exponential",
+        "bernoulli", "poisson", "uniform_discrete", # "constant", # "normal", "geometric", "exponential",
         # "uniform", "uniform_discrete"
     ]
 
@@ -66,5 +81,7 @@ def generate_distribution(config):
         return get_bernoulli()
     elif choice == "poisson":
         return get_poisson()
+    elif choice == "uniform_discrete":
+        return get_uniform_discrete()
     else:
         assert False, "SUCTION"

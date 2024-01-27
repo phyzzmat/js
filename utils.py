@@ -28,7 +28,7 @@ def check_spread(quote: Quote, spread: float, is_absolute=True):
 
 def get_side(expr, quote, n_boot=10):
     """
-    AI chooses side to trade as the best for him as a result of n_boot trials. 
+    AI chooses side to trade as a result of n_boot trials. 
     """
     mu_hat = sum([expr() for _ in range(n_boot)]) / n_boot
     return 'ask' if quote.ask_price - mu_hat < mu_hat - quote.bid_price else 'bid'
