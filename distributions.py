@@ -48,6 +48,34 @@ def get_poisson():
     )
 
 
+def get_geom():
+    p = s.uniform.rvs()
+    bernoulli_sampler = partial(
+        lambda: s.geom.rvs(
+            p,
+            size=1
+        )
+    )
+    return Distribution(
+        partial=bernoulli_sampler,
+        repr=f"Geom({round(p, 3)})"
+    )
+
+def get_bin():
+    p = s.uniform.rvs()
+    n = s.geom.rvs(p=0.1)
+    bernoulli_sampler = partial(
+        lambda: s.binom.rvs(
+            n, p,
+            size=1
+        )
+    )
+    return Distribution(
+        partial=bernoulli_sampler,
+        repr=f"Bin({n}, {round(p, 3)})"
+    )
+
+
 def get_uniform_discrete():
     n = s.geom.rvs(loc=0, p=0.2)
     bernoulli_sampler = partial(
@@ -67,7 +95,7 @@ def generate_distribution(config):
 
     CHOICES = [
         # "constant", # "normal", "geometric", "exponential",
-        "bernoulli", "poisson", "uniform_discrete",
+        "bernoulli", "poisson", "uniform_discrete", "bin", "geom"
         # "uniform", "uniform_discrete"
     ]
 
@@ -84,5 +112,9 @@ def generate_distribution(config):
         return get_poisson()
     elif choice == "uniform_discrete":
         return get_uniform_discrete()
+    elif choice == "bin":
+        return get_bin()
+    elif choice == "geom":
+        return get_geom()
     else:
         assert False, "SUCTION"

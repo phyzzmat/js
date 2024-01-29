@@ -37,6 +37,7 @@ def parse_speech(init_rec):
         tokenized_text = list(map(lambda x: x[:-1] if x.endswith('.') else x, filter(lambda word: is_float(word) or word.replace('.', '') in ALLOWED_WORDS, ''.join([
             i.lower() for i in text if i.isalnum() or i in ' .'
         ]).split())))
+        print(text)
         if check_pattern(tokenized_text, [is_float, is_partial('at'), is_float, is_float, is_partial('up')]):
             return Quote(
                 bid_amount=float(tokenized_text[3]),

@@ -4,8 +4,8 @@ from distributions import generate_distribution
 from operators import generate_binary_op, generate_unary_op
 
 
-def generate_tree(config):
-    difficulty = config['difficulty']
+def generate_tree(config, depth=0):
+    difficulty = config['difficulty'] * 0.5 ** depth
     p_unary = config['p_unary']
     root = Node()
     split = s.uniform.rvs() < difficulty
@@ -15,11 +15,11 @@ def generate_tree(config):
         if is_unary:
             root.right = None
             root.is_unary = True
-            root.left = generate_tree(config)
+            root.left = generate_tree(config, depth + 1)
             root.inner = generate_unary_op(config, root.left.inner)
         else:
-            root.left = generate_tree(config)
-            root.right = generate_tree(config)
+            root.left = generate_tree(config, depth + 1)
+            root.right = generate_tree(config, depth + 1)
             root.inner = generate_binary_op(
                 config, root.left.inner, root.right.inner)
         return root

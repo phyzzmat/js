@@ -14,7 +14,7 @@ class Quote:
         return f"{self.bid_price}  {self.bid_amount} | {self.ask_price}  {self.ask_amount}"
 
 
-def get_spread(config, expr, n_boot=1000):
+def get_spread(config, expr, n_boot=100):
     std = np.array([expr() for _ in range(n_boot)]).std()
     return np.random.random() * std / config['trading_session']['difficulty']
 

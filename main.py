@@ -7,7 +7,7 @@ from speech_parsing import parse_speech
 from tree import generate_tree
 import speech_recognition as sr
 from alsa_hack import noalsaerr
-from utils import bootstrap, check_spread, get_side, get_spread, resolve_market
+from utils import Quote, bootstrap, check_spread, get_side, get_spread, resolve_market
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,12 +32,16 @@ def play(config):
         spread = get_spread(config, expr)
         all_spreads.append(spread)
         print(
-            f'Make a market with spread <= {spread}. Tap Enter when ready for 5 seconds of speech recognition.')
+            f'Make a market with spread <= {spread}. Tap Enter when ready for 5 seconds of speech recognition (if enabled).')
         quote = None
 
         while quote is None:
-            input()
-            quote = parse_speech(init_rec)
+            if config['speech']:
+                input()
+                quote = parse_speech(init_rec)
+            else:
+                bp, ba, ap, aa = list(map(float, input().split()))
+                quote = Quote(bid_amount=ba, ask_amount=aa, ask_price=ap, bid_price=bp)
             if not check_spread(quote, spread):
                 quote = None
 
@@ -59,6 +63,7 @@ def play(config):
     pdf = PdfPages(f'game_{i}.pdf')
     simulations = [config['trading_session']['initial_balance']
                    ] * config['trading_session']['monte_carlo_simuls']
+    plt.tight_layout()
     for expr, quote, side, spread in zip(
         all_rvs, all_quotes, all_sides, all_spreads
     ):

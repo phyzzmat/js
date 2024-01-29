@@ -98,7 +98,7 @@ def generate_binary_op(config, left, right):
     elif choice == "mul":
         return get_mul(left, right)
     else:
-        assert False, "SUCTION"
+        assert False, "Unreachable"
 
 
 def generate_unary_op(config, left):
@@ -114,8 +114,8 @@ def generate_unary_op(config, left):
     choice = np.random.choice(CHOICES, p=probs)
 
     if choice == "bootstrap_mean":
-        return get_bootstrap_mean(left)
+        return get_bootstrap_mean(left, n=np.random.choice([2, 10, 50]))
     elif choice == "bootstrap_max":
-        return get_bootstrap_max(left)
+        return get_bootstrap_max(left, n=np.random.choice([2, 10, 50]))
     else:
-        assert False, "SUCTION"
+        assert False, "Unreachable"
