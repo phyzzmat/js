@@ -22,6 +22,8 @@ def play(config):
     all_prefix_pnls = [config['trading_session']['initial_balance']]
     all_sides = []
     all_spreads = []
+    ai_bids = []
+    ai_asks = []
     init_rec = sr.Recognizer()
 
     for i in range(config['trading_session']['n_events']):
@@ -63,12 +65,26 @@ def play(config):
     pdf = PdfPages(f'game_{i}.pdf')
     simulations = [config['trading_session']['initial_balance']
                    ] * config['trading_session']['monte_carlo_simuls']
+    simulations_ai = [config['trading_session']['initial_balance']
+                   ] * config['trading_session']['monte_carlo_simuls']
     plt.tight_layout()
     for expr, quote, side, spread in zip(
         all_rvs, all_quotes, all_sides, all_spreads
     ):
-        fig, ax = plt.subplots(3, figsize=(10, 10))
+        fig, ax = plt.subplots(4, figsize=(15, 15))
         boot = bootstrap(expr)
+
+        # AI's sizing
+        mean = spread / 2
+        var = boot.var()
+        constant_risk_size = mean / var * config['ai_risk']
+        worst_case_bid = config['ai_max_loss'] / max(0.01, boot.mean() - spread / 2 - boot.min())
+        worst_case_ask = config['ai_max_loss'] / max(0.01, boot.max() - boot.mean() - spread / 2)
+        ai_asks.append(min(constant_risk_size, worst_case_ask))
+        ai_bids.append(min(constant_risk_size, worst_case_bid))
+        ai_quote = Quote(bid_amount=ai_bids[-1], ask_amount=ai_asks[-1],
+                        bid_price=boot.mean() - spread / 2, ask_price=boot.mean() + spread / 2)
+
         ax[0].hist(boot, bins=50)
         ax[0].set_title(f'Random value pdf: {expr.__str__()}')
 
@@ -79,13 +95,18 @@ def play(config):
 
         pnls = []
         pnls_oppo = []
+        pnls_ai = []
         for i in range(config['trading_session']['monte_carlo_simuls']):
             pnl = resolve_market(expr, quote, side)[1]
             pnl_oppo = resolve_market(
                 expr, quote, 'bid' if side == 'ask' else 'ask')[1]
+            pnl_ai = resolve_market(
+                expr, ai_quote, 'bid' if np.random.random() < 0.5 else 'ask')[1]
             simulations[i] += pnl
+            simulations_ai[i] += pnl_ai
             pnls.append(pnl)
             pnls_oppo.append(pnl_oppo)
+            pnls_ai.append(pnl_ai)
 
         ax[0].axvline(non_taken_quote, c='purple',
                       label=f'Your quote (not taken) = {non_taken_quote}')
@@ -97,8 +118,13 @@ def play(config):
                    transform=ax[0].get_xaxis_transform())
         ax[0].axvline(boot.mean() - spread / 2, c='green',
                       label=f'Possible optimal approach (bid) = {boot.mean() - spread / 2}')
+        ax[0].text(boot.mean() - spread / 2, 0.99, round(ai_bids[-1], 2), color='green', ha='right', va='top', rotation=90,
+                   transform=ax[0].get_xaxis_transform())
         ax[0].axvline(boot.mean() + spread / 2, c='green',
                       label=f'Possible optimal approach (ask) = {boot.mean() + spread / 2}')
+        ax[0].text(boot.mean() + spread / 2, 0.99, round(ai_asks[-1], 2), color='green', ha='right', va='top', rotation=90,
+                   transform=ax[0].get_xaxis_transform())
+        
         ax[0].axvline(boot.mean(), c='yellow', label='Expected value')
 
         ax[0].axvspan(np.percentile(boot, 2.5), np.percentile(
@@ -107,7 +133,7 @@ def play(config):
         ax[0].legend()
 
         ax[1].hist(np.array(pnls), bins=50)
-        ax[1].set_title('Your P&L distribution on this market')
+        ax[1].set_title(f'Your P&L distribution on this market')
         ax[1].legend()
 
         ax[2].hist(np.array(pnls_oppo), bins=50)
@@ -115,18 +141,28 @@ def play(config):
             'Your P&L distribution on this market if AI took opposite quote')
         ax[2].legend()
 
+        ax[3].hist(np.array(pnls_ai), bins=50)
+        ax[3].set_title(
+            'AI P&L distribution')
+        ax[3].legend()
+
+        
+
         pdf.savefig(fig)
 
     simulations = np.array(simulations)
-    fig, ax = plt.subplots(3, figsize=(10, 10))
+    fig, ax = plt.subplots(4, figsize=(15, 15))
     ax[0].set_title('P&L during simulation')
     ax[1].set_title(
         f"P&L distribution over {config['trading_session']['monte_carlo_simuls']} trading sessions")
     ax[2].set_title(
         f"P&L log1p-distribution over {config['trading_session']['monte_carlo_simuls']} trading sessions")
+    ax[3].set_title("P&L distribution for AI bet sizing")
+
     ax[0].plot(all_prefix_pnls)
     ax[1].hist(simulations, bins=50)
     ax[2].hist(np.log1p(np.maximum(0, simulations)), bins=50)
+    ax[3].hist(np.array(simulations_ai), bins=50)
     pdf.savefig(fig)
 
     pdf.close()

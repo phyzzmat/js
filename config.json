@@ -1,7 +1,7 @@
 {
     "trading_session": {
-        "n_events": 5,
-        "monte_carlo_simuls": 10000,
+        "n_events": 3,
+        "monte_carlo_simuls": 3000,
         "difficulty": 0.5,
         "initial_balance": 100,
         "time_penalty": 1
@@ -17,13 +17,15 @@
         }
     },
     "distribution_probs": {
-        "bernoulli": 0.4,
+        "bernoulli": 0.25,
         "poisson": 0.1,
-        "uniform_discrete": 0.3,
+        "uniform_discrete": 0.4,
         "bin": 0.15,
-        "geom": 0.05
+        "geom": 0.1
     },
     "p_unary": 0.4,
     "difficulty": 0.7,
-    "speech": false
+    "speech": false,
+    "ai_risk": 25,
+    "ai_max_loss": 25
 }
